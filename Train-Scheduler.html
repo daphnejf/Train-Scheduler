@@ -5,7 +5,7 @@
   <head>
 
     <meta charset="UTF-8">
-    <title>Employee Tracker</title>
+    <title>Train Scheduler</title>
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
@@ -110,11 +110,6 @@
     var firstconverted = "";
     var arrival = "";
 
-    function currenttime() {
-        var current = moment().format('hh:mm');
-        setTimeout(currenttime,60000);
-    };
-
     // Capture Button Click
     $("#add-train").on("click", function(event) {
     event.preventDefault();
@@ -123,21 +118,16 @@
     trainname = $("#trainname-input").val().trim();
     destination = $("#destination-input").val().trim();
     first = $("#first-input").val().trim();
-    firstconverted = moment(first, "hh:mm").subtract(1, "years");
     frequency = $("#frequency-input").val().trim();
-    var difftime = moment().diff(moment(firstconverted), "minutes");
-    var remainder = difftime % frequency;
-    minutesaway = frequency - remainder;
-    var nexttrain = moment().add(minutesaway, "minutes");
-    arrival = moment(nexttrain). format("hh:mm a");
+    
+    
+
 
     database.ref().push({
         trainname: trainname,
         destination: destination,
         first: first,
         frequency: frequency,
-        arrival: arrival,
-        minutesaway: minutesaway,
         dateAdded: firebase.database.ServerValue.TIMESTAMP
     });
 
@@ -148,28 +138,27 @@
     
     // storing the snapshot.val() in a variable for convenience
       var sv = snapshot.val();
+    
+    firstconverted = moment(sv.first, "hh:mm").subtract(1, "years");
+    var difftime = moment().diff(moment(firstconverted), "minutes");
+    var remainder = difftime % sv.frequency;
+    minutesaway = sv.frequency - remainder;
+    var nexttrain = moment().add(minutesaway, "minutes");
+    arrival = moment(nexttrain). format("hh:mm a");
 
     // Console.loging the last user's data
       console.log(sv.trainname);
       console.log(sv.destination);
       console.log(sv.first);
       console.log(sv.frequency);
-      console.log(sv.arrival);
-      console.log(sv.minutesaway);
 
     // Change the HTML to reflect
-      $('#train-schedule').append('<tr><td>' + (sv.trainname) + '</td><td>' + (sv.destination) + '</td><td>' + (sv.frequency) + '</td><td>' + (sv.arrival) + '</td><td>' + (sv.minutesaway) + '</td></tr>');
+      $('#train-schedule').append('<tr><td>' + (sv.trainname) + '</td><td>' + (sv.destination) + '</td><td>' + (sv.frequency) + '</td><td>' + (arrival) + '</td><td>' + (minutesaway) + '</td></tr>');
 
     // Handle the errors
     }, function(errorObject) {
       console.log("Errors handled: " + errorObject.code);
     });
-
-    currenttime();
-    
-    setInterval(function() {
-        window.location.reload();
-    },60000);
 
     </script>
 
