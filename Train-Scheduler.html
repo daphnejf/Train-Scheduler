@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+
+<html lang="en-us">
+
+  <head>
+
+    <meta charset="UTF-8">
+    <title>Employee Tracker</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/live/3.0/firebase.js"></script>
+    <script src="https://cdn.jsdelivr.net/momentjs/2.12.0/moment.min.js"></script>
+
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="jumbotron" style="background-color: lightcoral; color: black">
+        <h1 class="text-center">Train Scheduler</h1>
+      </div>
+
+      <div class="row">
+
+        <div class="col-lg-12">
+
+          <div class="panel panel-primary">
+            <div class="panel-heading" style="background-color: lightblue; color:black">
+              <h3 class="panel-title" style="background-color: lightblue; color:black"><strong>Current Train Schedule</strong></h3>
+            </div>
+            <div class="panel-body">
+              <table class="table table-hover" id='train-schedule'>
+                <thead>
+                  <tr>
+                    <th>Train Name</th>
+                    <th>Destination</th>
+                    <th>Frequency (min)</th>
+                    <th>Next Arrival</th>
+                    <th>Minutes Away</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel panel-primary">
+            <div class="panel-heading" style="background-color: lightgreen; color:black">
+              <h3 class="panel-title" style="background-color: lightgreen; color:black"><strong>Add Train</strong></h3>
+            </div>
+            <div class="panel-body">
+
+              <form>
+                <div class="form-group">
+                  <label for="train-name-input">Train Name</label>
+                  <input class="form-control" id="trainname-input" type="text">
+                </div>
+                <div class="form-group">
+                  <label for="destination-input">Destination</label>
+                  <input class="form-control" id="destination-input" type="text">
+                </div>
+                <div class="form-group">
+                  <label for="first-input">First Train Time (hh:mm - military time)</label>
+                  <input class="form-control" id="first-input" type="text">
+                </div>
+                <div class="form-group">
+                  <label for="frequency-input">Frequency (min)</label>
+                  <input class="form-control" id="frequency-input" type="text">
+                </div>
+                <button class="btn btn-primary" id="add-train" type="submit" style="background-color: lightsalmon; color:black">Submit</button>
+              </form>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment.min.js"></script> 
+
+    <script>
+    
+    var config = {
+    apiKey: "AIzaSyA1FfZH_iZjkm1jVTQcFs1VXE5Emum83ug",
+    authDomain: "bootcamp-example-b3867.firebaseapp.com",
+    databaseURL: "https://bootcamp-example-b3867.firebaseio.com",
+    projectId: "bootcamp-example-b3867",
+    storageBucket: "bootcamp-example-b3867.appspot.com",
+    messagingSenderId: "832033545583",
+    appId: "1:832033545583:web:49474bcefa223a23349c9a"
+  };
+
+    firebase.initializeApp(config);
+
+    var database = firebase.database();
+
+    // Initial Values
+    var trainname = "";
+    var destination = "";
+    var first = "";
+    var frequency = 0;
+    var minarrival = "";
+    var minutesaway = "";
+    var firstconverted = "";
+    var arrival = "";
+
+    function currenttime() {
+        var current = moment().format('hh:mm');
+        setTimeout(currenttime,60000);
+    };
+
+    // Capture Button Click
+    $("#add-train").on("click", function(event) {
+    event.preventDefault();
+
+    // Grabbed values from text boxes
+    trainname = $("#trainname-input").val().trim();
+    destination = $("#destination-input").val().trim();
+    first = $("#first-input").val().trim();
+    firstconverted = moment(first, "hh:mm").subtract(1, "years");
+    frequency = $("#frequency-input").val().trim();
+    var difftime = moment().diff(moment(firstconverted), "minutes");
+    var remainder = difftime % frequency;
+    minutesaway = frequency - remainder;
+    var nexttrain = moment().add(minutesaway, "minutes");
+    arrival = moment(nexttrain). format("hh:mm a");
+
+    database.ref().push({
+        trainname: trainname,
+        destination: destination,
+        first: first,
+        frequency: frequency,
+        arrival: arrival,
+        minutesaway: minutesaway,
+        dateAdded: firebase.database.ServerValue.TIMESTAMP
+    });
+
+    });
+
+    // Firebase watcher .on("child_added"
+    database.ref().on("child_added", function(snapshot) {
+    
+    // storing the snapshot.val() in a variable for convenience
+      var sv = snapshot.val();
+
+    // Console.loging the last user's data
+      console.log(sv.trainname);
+      console.log(sv.destination);
+      console.log(sv.first);
+      console.log(sv.frequency);
+      console.log(sv.arrival);
+      console.log(sv.minutesaway);
+
+    // Change the HTML to reflect
+      $('#train-schedule').append('<tr><td>' + (sv.trainname) + '</td><td>' + (sv.destination) + '</td><td>' + (sv.frequency) + '</td><td>' + (sv.arrival) + '</td><td>' + (sv.minutesaway) + '</td></tr>');
+
+    // Handle the errors
+    }, function(errorObject) {
+      console.log("Errors handled: " + errorObject.code);
+    });
+
+    currenttime();
+    
+    setInterval(function() {
+        window.location.reload();
+    },60000);
+
+    </script>
+
+  </body>
+
+</html>
